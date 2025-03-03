@@ -258,7 +258,7 @@ const ResumePreview = ({ data }) => {
   };
 
   return (
-    <div id="resume-preview" style={{ backgroundColor: '#fff', padding: '20px', color: '#000', fontFamily: 'Arial, sans-serif' }}>
+    <div id="resume-preview" style={{ backgroundColor: '#fff', padding: '20px', color: '#000',  fontFamily: 'Arial, sans-serif' }}>
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0' }}>{data.personalInfo.name}</h1>
@@ -291,6 +291,9 @@ const ResumePreview = ({ data }) => {
               {/* <p style={{ fontSize: '14px', margin: '5px 0' }}>
                 {exp.company} | {exp.startDate} - {exp.endDate}
               </p> */}
+                          <p style={{ fontSize: '14px', margin: '5px 0' }}>{exp.startDate}</p>
+                          <p style={{ fontSize: '14px', margin: '5px 0' }}>{exp.endDate}</p>
+
             <p style={{ fontSize: '14px', margin: '5px 0' }}>{exp.duration}</p>
 
               <p style={textStyle}>{exp.description}</p>
@@ -307,7 +310,7 @@ const ResumePreview = ({ data }) => {
             <div key={index} style={{ marginBottom: '15px' }}>
               <h3 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0' }}>{edu.degree}</h3>
               <p style={{ fontSize: '14px', margin: '5px 0' }}>
-                {edu.school}, {edu.university} | {edu.graduationDate}
+                {edu.school}, {edu.university} |{edu.graduationStartDate} - {edu.graduationDate}
               </p>
               <p style={textStyle}>{edu.fieldOfStudy}</p>
               {edu.percentage && <p style={textStyle}>Percentage: {edu.percentage}</p>}

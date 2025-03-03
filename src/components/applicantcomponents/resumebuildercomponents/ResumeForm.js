@@ -152,6 +152,7 @@ import React from "react";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import ResumeTemplateQueue from "./ResumeTemplateQueue";
 
+
 const ResumeForm = ({ data, onChange }) => {
   const updatePersonalInfo = (field, value) => {
     onChange({
@@ -920,6 +921,7 @@ const removeInterest = (index) => {
         </button>
         <h6 className="mt-2">Choose Template</h6>
         <ResumeTemplateQueue/>
+      
         
       </div>
       
