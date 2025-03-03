@@ -257,8 +257,17 @@
 import React, { useState,useEffect } from "react";
 import { FaFilePdf } from "react-icons/fa";
 import * as pdfjsLib from "pdfjs-dist/webpack";
+import axios from "axios";
+import {apiUrl} from  "../../services/ApplicantAPIService"
+import Snackbar from '../common/Snackbar';
+import { useUserContext } from '../common/UserProvider';
+
 
 const DropResume = () => {
+  const { user } = useUserContext();
+  const [snackbars, setSnackbars] = useState([]);
+  const [submitted, setSubmitted] = useState(false);
+
   const [selectedFile, setSelectedFile] = useState(null);
   const [error, setError] = useState("");
   const [atsScore, setAtsScore] = useState(null);
@@ -286,7 +295,21 @@ const DropResume = () => {
       setError("Invalid file type! Only PDF files are allowed.");
     }
   };
+  const addSnackbar = (snackbar) => {
+    setSnackbars((prevSnackbars) => [...prevSnackbars, snackbar]);
+    
+  };
+// Close Snackbar
+const handleCloseSnackbar = (index) => {
+  setSnackbars((prevSnackbars) => prevSnackbars.filter((_, i) => i !== index));
+};
 
+// Navigate when all snackbars are closed **AND** submitted is true
+useEffect(() => {
+  if (submitted && snackbars.length === 0) {
+    window.location.href = "/applicant-resume";
+  }
+}, [snackbars, submitted]);
   // Extract text from PDF
   const extractTextFromPDF = async (file) => {
     const reader = new FileReader();
@@ -318,12 +341,49 @@ const DropResume = () => {
     setAtsScore(Math.round(score));
   };
 
-  // Handle file submission
-  const handleSubmit = () => {
-    if (selectedFile) {
-      extractTextFromPDF(selectedFile);
+  const handleResumeUpload = async (resumeFile) => {
+  try {
+    if (!resumeFile) {
+      addSnackbar({ message: "Please select a file before uploading.", type: "error" });
+      return;
     }
-  };
+
+    const jwtToken = localStorage.getItem('jwtToken');
+    const formData = new FormData();
+    formData.append('resume', resumeFile);
+
+    const response = await axios.post(
+      `${apiUrl}/resume/upload/${user.id}`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    console.log(response.data);
+    addSnackbar({ message: "Resume uploaded successfully!", type: "success" });
+    window.location.reload();
+  } catch (error) {
+    console.error('Error uploading resume:', error);
+    addSnackbar({ message: "Error uploading resume. Please try again.", type: "error" });
+  }
+};
+
+// Updated handleSubmit function
+const handleSubmit = () => {
+  if (selectedFile) {
+    setSubmitted(true); // Mark as submitted
+
+    extractTextFromPDF(selectedFile); // Extract ATS score if needed
+    handleResumeUpload(selectedFile); // Upload the resume
+  } else {
+    setError("Please select a file before submitting.");
+  }
+};
+
 
   // Handle "Create from Scratch"
   const handleCreateFromScratch = () => {
@@ -433,14 +493,14 @@ const DropResume = () => {
         )}
 
         {/* Display ATS Score */}
-        {atsScore !== null && (
+        {/* {atsScore !== null && (
           <div style={{ marginTop: "20px" }}>
             <h4>ATS Score: {atsScore} / 100</h4>
             <p>
               {atsScore < 50 ? "❌ Poor" : atsScore < 70 ? "⚠️ Average" : "✅ Best"}
             </p>
           </div>
-        )}
+        )} */}
 
         <hr style={{ margin: "20px 0" }} />
         <p>Don't have a resume yet?</p>
@@ -459,6 +519,17 @@ const DropResume = () => {
           Create from Scratch
         </button>
       </div>
+      {snackbars.map((snackbar, index) => (
+        <Snackbar
+          key={index}
+          index={index}
+          message={snackbar.message}
+          type={snackbar.type}
+          onClose={handleCloseSnackbar}
+          link={snackbar.link}
+          linkText={snackbar.linkText}
+        />
+      ))}
     </div>
   );
 };

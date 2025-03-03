@@ -1,159 +1,16 @@
-// import React from 'react';
-// import { FaPlus, FaTrash } from 'react-icons/fa';
-
-//  const ResumeForm = ({ data, onChange }) => {
-//   const updatePersonalInfo = (field, value) => {
-//     onChange({
-//       ...data,
-//       personalInfo: {
-//         ...data.personalInfo,
-//         [field]: value,
-//       },
-//     });
-//   };
-
-//   return (
-//     <div className="container row py-4">
-//       <div className="mb-4">
-//         <h2 className="h4">Personal Information</h2>
-//         <div className="row g-3">
-//           <div className="col-md-6">
-//             <label className="form-label">Full Name</label>
-//             <input
-//               type="text"
-//               className="form-control"
-//               placeholder="Full Name"
-//               value={data.personalInfo.name}
-//               onChange={(e) => updatePersonalInfo('name', e.target.value)}
-//             />
-//           </div>
-//           <div className="col-md-6">
-//             <label className="form-label">Professional Title</label>
-//             <input
-//               type="text"
-//               className="form-control"
-//               placeholder="Professional Title"
-//               value={data.personalInfo.title}
-//               onChange={(e) => updatePersonalInfo('title', e.target.value)}
-//             />
-//           </div>
-//           <div className="col-md-6">
-//             <label className="form-label">Email</label>
-//             <input
-//               type="email"
-//               className="form-control"
-//               placeholder="Email"
-//               value={data.personalInfo.email}
-//               onChange={(e) => updatePersonalInfo('email', e.target.value)}
-//             />
-//           </div>
-//           <div className="col-md-6">
-//             <label className="form-label">Phone</label>
-//             <input
-//               type="tel"
-//               className="form-control"
-//               placeholder="Phone"
-//               value={data.personalInfo.phone}
-//               onChange={(e) => updatePersonalInfo('phone', e.target.value)}
-//             />
-//           </div>
-//           <div className="col-md-12">
-//             <label className="form-label">Location</label>
-//             <input
-//               type="text"
-//               className="form-control"
-//               placeholder="Location"
-//               value={data.personalInfo.location}
-//               onChange={(e) => updatePersonalInfo('location', e.target.value)}
-//             />
-//           </div>
-//           <div className="col-md-12">
-//             <label className="form-label">Professional Summary</label>
-//             <textarea
-//               className="form-control"
-//               placeholder="Professional Summary"
-//               rows="3"
-//               value={data.personalInfo.summary}
-//               onChange={(e) => updatePersonalInfo('summary', e.target.value)}
-//             />
-//           </div>
-//         </div>
-//       </div>
-//       {/* Example of adding an experience section */}
-//       <div className="mb-4">
-//         <h2 className="h4">Experience</h2>
-//         {data.experience.map((exp, index) => (
-//           <div key={index} className="mb-3 border p-3 position-relative">
-//             <button
-//               type="button"
-//               className="btn btn-danger position-absolute top-0 end-0 m-2"
-//               onClick={() => {
-//                 const newExperience = data.experience.filter((_, i) => i !== index);
-//                 onChange({ ...data, experience: newExperience });
-//               }}
-//             >
-//               <FaTrash />
-//             </button>
-//             <div className="mb-3">
-//               <label className="form-label">Company</label>
-//               <input
-//                 type="text"
-//                 className="form-control"
-//                 placeholder="Company"
-//                 value={exp.company}
-//                 onChange={(e) => {
-//                   const newExperience = [...data.experience];
-//                   newExperience[index].company = e.target.value;
-//                   onChange({ ...data, experience: newExperience });
-//                 }}
-//               />
-//             </div>
-//             <div className="mb-3">
-//               <label className="form-label">Position</label>
-//               <input
-//                 type="text"
-//                 className="form-control"
-//                 placeholder="Position"
-//                 value={exp.position}
-//                 onChange={(e) => {
-//                   const newExperience = [...data.experience];
-//                   newExperience[index].position = e.target.value;
-//                   onChange({ ...data, experience: newExperience });
-//                 }}
-//               />
-//             </div>
-//             {/* Add more fields as needed */}
-//           </div>
-//         ))}
-//         <button
-//           type="button"
-//           className="btn btn-primary"
-//           onClick={() => {
-//             const newExperience = [
-//               ...data.experience,
-//               { company: '', position: '' /* Add other fields as needed */ },
-//             ];
-//             onChange({ ...data, experience: newExperience });
-//           }}
-//         >
-//           <FaPlus className="me-2" />
-//           Add Experience
-//         </button>
-//       </div>
-//       {/* Add more sections like Education, Skills, etc., following the same pattern */}
-//     </div>
-//   );
-// };
-
-
-// export default ResumeForm;
 
 import React from "react";
 import { FaPlus, FaTrash } from "react-icons/fa";
+
 import ResumeTemplateQueue from "./ResumeTemplateQueue";
+import { useUserContext } from "../../common/UserProvider";
+
 
 
 const ResumeForm = ({ data, onChange }) => {
+
+  const { user } = useUserContext();
+    const applicantId = user.id;
   const updatePersonalInfo = (field, value) => {
     onChange({
       ...data,
@@ -273,74 +130,52 @@ const removeInterest = (index) => {
   onChange({ ...data, interests: newInterests });
 };
 
+  // Function to save personal info using the API
+  const savePersonalInfo = async () => {
+    const { personalInfo } = data;
+
+    const payload = {
+      fullName: personalInfo.name,
+      email: personalInfo.email,
+      phoneNo: personalInfo.phone,
+      address: personalInfo.location,
+      linkedin: personalInfo.linkedin,
+      github: personalInfo.github,
+      website: personalInfo.website,
+      role: personalInfo.title,
+      summary: personalInfo.summary,
+    };
+
+    try {
+      const jwtToken = localStorage.getItem('jwtToken');
+      const response = await fetch(
+        `http://192.168.86.29:8082/personalInfo/savePersonalInfo/${applicantId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwtToken}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (response.ok) {
+        alert("Personal information saved successfully!");
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to save personal information: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error("Error saving personal information:", error);
+      alert("An error occurred while saving personal information.");
+    }
+  };
+
+
   return (
     <div className="container row py-4">
       {/* Personal Information */}
-      {/* <div className="mb-4">
-        <h2 className="h4">Personal Information</h2>
-        <div className="row g-3">
-          <div className="col-md-6">
-            <label className="form-label">Full Name</label>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Full Name"
-              value={data.personalInfo.name}
-              onChange={(e) => updatePersonalInfo("name", e.target.value)}
-            />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">Professional Title</label>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Professional Title"
-              value={data.personalInfo.title}
-              onChange={(e) => updatePersonalInfo("title", e.target.value)}
-            />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">Email</label>
-            <input
-              type="email"
-              className="form-control"
-              placeholder="Email"
-              value={data.personalInfo.email}
-              onChange={(e) => updatePersonalInfo("email", e.target.value)}
-            />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">Phone</label>
-            <input
-              type="tel"
-              className="form-control"
-              placeholder="Phone"
-              value={data.personalInfo.phone}
-              onChange={(e) => updatePersonalInfo("phone", e.target.value)}
-            />
-          </div>
-          <div className="col-md-12">
-            <label className="form-label">Location</label>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Location"
-              value={data.personalInfo.location}
-              onChange={(e) => updatePersonalInfo("location", e.target.value)}
-            />
-          </div>
-          <div className="col-md-12">
-            <label className="form-label">Professional Summary</label>
-            <textarea
-              className="form-control"
-              placeholder="Professional Summary"
-              rows="3"
-              value={data.personalInfo.summary}
-              onChange={(e) => updatePersonalInfo("summary", e.target.value)}
-            />
-          </div>
-        </div>
-      </div> */}
 <div className="mb-4">
   <h2 className="h4">Personal Information</h2>
   <div className="row g-3">
@@ -438,6 +273,13 @@ const removeInterest = (index) => {
       />
     </div>
   </div>
+  <button
+          type="button"
+          className="btn btn-success mt-3"
+          onClick={savePersonalInfo}
+        >
+          Save Personal Information
+        </button>
 </div>
 
       {/* Experience Section */}
@@ -483,6 +325,34 @@ const removeInterest = (index) => {
                 }}
               />
             </div>
+            <div className="mb-3">
+              <label className="form-label">Start Date</label>
+              <input
+                type="date"
+                className="form-control"
+                placeholder="e.g. Jan 2020"
+                value={exp.startDate}
+                onChange={(e) => {
+                  const newExperience = [...data.experience];
+                  newExperience[index].startDate = e.target.value;
+                  onChange({ ...data, experience: newExperience });
+                }}
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">End Date</label>
+              <input
+                type="date"
+                className="form-control"
+                placeholder="e.g. Jan 2020"
+                value={exp.endDate}
+                onChange={(e) => {
+                  const newExperience = [...data.experience];
+                  newExperience[index].endDate = e.target.value;
+                  onChange({ ...data, experience: newExperience });
+                }}
+              />
+            </div>
             {/* Duration Field */}
             <div className="mb-3">
               <label className="form-label">Duration</label>
@@ -497,6 +367,19 @@ const removeInterest = (index) => {
                   onChange({ ...data, experience: newExperience });
                 }}
               />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Description</label>
+              <textarea
+                className="form-control"
+                placeholder="Describe your work experience"
+                rows="3"
+                value={exp.description}
+                onChange={(e) => {
+                  const newExperience = [...data.experience];
+                  newExperience[index].description = e.target.value;
+                  onChange({ ...data, experience: newExperience });
+                }}              />
             </div>
           </div>
         ))}
@@ -516,68 +399,6 @@ const removeInterest = (index) => {
         </button>
       </div>
       {/* Education Section */}
-      {/* <div className="mb-4">
-        <h2 className="h4">Education</h2>
-        {data.education.map((edu, index) => (
-          <div key={index} className="mb-3 border p-3 position-relative">
-            <button
-              type="button"
-              className="btn btn-danger position-absolute top-0 end-0 m-2"
-              onClick={() => removeEducation(index)}
-            >
-              <FaTrash />
-            </button>
-            <div className="mb-3">
-              <label className="form-label">School</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="School"
-                value={edu.school}
-                onChange={(e) => updateEducation(index, 'school', e.target.value)}
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Degree</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Degree"
-                value={edu.degree}
-                onChange={(e) => updateEducation(index, 'degree', e.target.value)}
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Graduation Date</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="e.g. May 2024"
-                value={edu.graduationDate}
-                onChange={(e) => updateEducation(index, 'graduationDate', e.target.value)}
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Description</label>
-              <textarea
-                className="form-control"
-                placeholder="Describe your studies, achievements, or relevant coursework"
-                rows="3"
-                value={edu.description}
-                onChange={(e) => updateEducation(index, 'description', e.target.value)}
-              />
-            </div>
-          </div>
-        ))}
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={addEducation}
-        >
-          <FaPlus className="me-2" />
-          Add Education
-        </button>
-      </div> */}
       <div className="mb-4">
         <h2 className="h4">Education</h2>
         {data.education.map((edu, index) => (
@@ -630,7 +451,17 @@ const removeInterest = (index) => {
               />
             </div>
             <div className="mb-3">
-              <label className="form-label">Graduation Date</label>
+              <label className="form-label">Graduation Start Date</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="e.g., May 2024"
+                value={edu.graduationStartDate}
+                onChange={(e) => updateEducation(index, 'graduationStartDate', e.target.value)}
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Graduation End Date</label>
               <input
                 type="text"
                 className="form-control"
