@@ -258,7 +258,7 @@ const ResumePreview = ({ data }) => {
   };
 
   return (
-    <div id="resume-preview" style={{ backgroundColor: '#fff', padding: '20px', color: '#000', fontFamily: 'Arial, sans-serif' }}>
+    <div id="resume-preview" style={{ backgroundColor: '#fff', padding: '20px', color: '#000',  fontFamily: 'Arial, sans-serif' }}>
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0' }}>{data.personalInfo.name}</h1>

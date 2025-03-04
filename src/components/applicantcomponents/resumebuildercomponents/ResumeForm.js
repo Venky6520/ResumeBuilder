@@ -6,6 +6,7 @@ import ResumeTemplateQueue from "./ResumeTemplateQueue";
 import { useUserContext } from "../../common/UserProvider";
 
 
+
 const ResumeForm = ({ data, onChange }) => {
 
   const { user } = useUserContext();
@@ -751,6 +752,7 @@ const removeInterest = (index) => {
         </button>
         <h6 className="mt-2">Choose Template</h6>
         <ResumeTemplateQueue/>
+      
         
       </div>
       
