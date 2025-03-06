@@ -307,7 +307,8 @@ const handleCloseSnackbar = (index) => {
 // Navigate when all snackbars are closed **AND** submitted is true
 useEffect(() => {
   if (submitted && snackbars.length === 0) {
-    window.location.href = "/applicant-resume";
+    // window.location.href = "/applicant-resume";
+    console.log("Resume uploaded successfully!");
   }
 }, [snackbars, submitted]);
   // Extract text from PDF
@@ -365,7 +366,7 @@ useEffect(() => {
 
     console.log(response.data);
     addSnackbar({ message: "Resume uploaded successfully!", type: "success" });
-    window.location.reload();
+    // window.location.reload();
   } catch (error) {
     console.error('Error uploading resume:', error);
     addSnackbar({ message: "Error uploading resume. Please try again.", type: "error" });

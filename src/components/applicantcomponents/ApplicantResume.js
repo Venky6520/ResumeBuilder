@@ -17,7 +17,9 @@ const ApplicantResume = () => {
   const fetchApplicantDetails = async () => {
     try {
       const jwtToken = localStorage.getItem('jwtToken');
+    
       const response = await fetch(`${apiUrl}/applicant/getApplicantById/${user.id}`, {
+
         headers: {
           Authorization: `Bearer ${jwtToken}`,
         },
@@ -37,16 +39,26 @@ const ApplicantResume = () => {
   const fetchResumeContent = async () => {
     try {
       const jwtToken = localStorage.getItem('jwtToken');
-      const response = await fetch(`${apiUrl}/resume/pdf/${user.id}`, {
+      // const response = await fetch(`${apiUrl}/resume/pdf/${user.id}`, {
+        // const userData = JSON.parse(localStorage.getItem("user"));
+        // const applicantId = userData?.id;
+  
+            const response = await fetch(`${apiUrl}/resume-builder/getResume/${user.id}`, {
         headers: {
           Authorization: `Bearer ${jwtToken}`,
         },
       });
+      
       if (response.ok) {
         const blob = await response.blob();
         const url = URL.createObjectURL(blob);
+        
+
         setPdfUrl(url);
         setLoading(false);
+        setShowBanner(false);
+
+        
       } else {
         console.error('Error fetching resume content:', response);
       }

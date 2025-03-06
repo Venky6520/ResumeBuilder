@@ -1,15 +1,100 @@
 
-import React from "react";
+
+import React, { useState, useEffect } from "react";
 import { FaPlus, FaTrash } from "react-icons/fa";
-
-import ResumeTemplateQueue from "./ResumeTemplateQueue";
 import { useUserContext } from "../../common/UserProvider";
-
+import ResumeTemplateQueue from "./ResumeTemplateQueue";
+import { apiUrl } from "../../../services/ApplicantAPIService";
 
 
 const ResumeForm = ({ data, onChange }) => {
+const [resumeData, setResumeData] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const user = useUserContext()?.user;
 
-  const { user } = useUserContext();
+  useEffect(() => {
+    if (user?.id) {
+      fetchResumeData();
+    }
+  }, [user?.id]); // Depend only on `user?.id`
+
+  const fetchResumeData = async () => {
+    if (!user?.id) return;
+
+    setLoading(true);
+    try {
+      const jwtToken = localStorage.getItem("jwtToken");
+      const response = await fetch(`${apiUrl}/resume-builder/getResume/${user.id}`, {
+        headers: { Authorization: `Bearer ${jwtToken}` },
+      });
+
+      if (!response.ok) throw new Error(`Error: ${response.status}`);
+
+      const data = await response.json();
+      setResumeData({
+        ...(data.resumePersonalInfo || {}), // Spread personal info
+        experiences: data.resumeExperiences || [], // Ensure experiences is always an array
+        educations: data.resumeEducations || [],
+        projects: data.resumeProjects || [],
+        certifications: data.resumeCertificates || [],
+        languages: data.resumeLanguages || [],
+        interests: data.resumeIntrests || [],
+        skills: data.resumeTechnicalSkills || [],
+        
+       
+      });
+      console.log(data.resumeExperiences);
+      console.log(data.resumeExperiences[0].company);
+      setIsEditing(true);
+
+
+    } catch (error) {
+      console.error("Error fetching resume data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    console.log("Updated resumeData:", resumeData);
+    console.log("Company:", resumeData.resumeExperiences?.[0]?.company);
+    console.log("Company:", resumeData.experiences?.[0]?.company);
+    console.log("Company:", resumeData.educations?.[0]?.college);
+
+
+  }, [resumeData]); // Runs every time resumeData updates
+  
+
+  const handleChange = (e) => {
+    setResumeData({ ...resumeData, [e.target.name]: e.target.value });
+  };
+
+  const handleSave = async () => {
+    try {
+      const jwtToken = localStorage.getItem("jwtToken");
+      const response = await fetch(`${apiUrl}/resume-builder/updateResume/${user.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwtToken}`,
+        },
+        body: JSON.stringify(resumeData),
+      });
+
+      if (!response.ok) throw new Error(`Error: ${response.status}`);
+
+      await response.json();
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating resume:", error);
+    }
+  };
+
+  if (loading) return <p>Loading...</p>;
+  if (!resumeData) return <p>No resume data found.</p>;
+
+  // const { user } = useUserContext();
     const applicantId = user.id;
   const updatePersonalInfo = (field, value) => {
     onChange({
@@ -26,7 +111,42 @@ const ResumeForm = ({ data, onChange }) => {
     newEducation[index] = { ...newEducation[index], [field]: value };
     onChange({ ...data, education: newEducation });
   };
-
+  
+ 
+  
+  //   try {
+  //     // Retrieve user data from localStorage (or state)
+  //     const userData = JSON.parse(localStorage.getItem("user")); // Ensure user data is stored
+  //     const jwtToken = userData?.data?.jwt;
+  //     const userId = userData?.id;
+  
+  //     if (!jwtToken || !userId) {
+  //       console.error("User is not authenticated");
+  //       return;
+  //     }
+  
+  //     // Extract experiences dynamically from the form state
+  //     const experiences = data.experience;
+  
+  //     // Send API request
+  //     const response = await fetch(`http://192.168.86.29:8081/experience/saveExperiences/${userId}`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         "Authorization": `Bearer ${jwtToken}`, // Add JWT token
+  //       },
+  //       body: JSON.stringify(experiences),
+  //     });
+  
+  //     const result = await response.json();
+  //     console.log(result); // Should log: "All experiences saved successfully"
+  //   } catch (error) {
+  //     console.error("Error saving experiences:", error);
+  //   }
+  // };
+  
+  
+  
   // Function to add a new education entry
   const addEducation = () => {
     const newEducation = [
@@ -130,48 +250,347 @@ const removeInterest = (index) => {
   onChange({ ...data, interests: newInterests });
 };
 
-  // Function to save personal info using the API
-  const savePersonalInfo = async () => {
-    const { personalInfo } = data;
+  
+  // const savePersonalInfo = async () => {
+  //   const { personalInfo } = data;
 
-    const payload = {
-      fullName: personalInfo.name,
-      email: personalInfo.email,
-      phoneNo: personalInfo.phone,
-      address: personalInfo.location,
-      linkedin: personalInfo.linkedin,
-      github: personalInfo.github,
-      website: personalInfo.website,
-      role: personalInfo.title,
-      summary: personalInfo.summary,
-    };
+  //   const payload = {
+  //     fullName: personalInfo.name,
+  //     email: personalInfo.email,
+  //     phoneNo: personalInfo.phone,
+  //     address: personalInfo.location,
+  //     linkedin: personalInfo.linkedin,
+  //     github: personalInfo.github,
+  //     website: personalInfo.website,
+  //     role: personalInfo.title,
+  //     summary: personalInfo.summary,
+  //   };
 
+  //   try {
+  //     const jwtToken = localStorage.getItem('jwtToken');
+  //     const response = await fetch(
+  //       `http://192.168.86.29:8082/personalInfo/savePersonalInfo/${applicantId}`,
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${jwtToken}`,
+  //         },
+  //         body: JSON.stringify(payload),
+  //       }
+  //     );
+
+  //     if (response.ok) {
+  //       alert("Personal information saved successfully!");
+  //     } else {
+  //       const errorData = await response.json();
+  //       alert(`Failed to save personal information: ${errorData.message}`);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error saving personal information:", error);
+  //     alert("An error occurred while saving personal information.");
+  //   }
+  // };
+
+  const saveResume = async () => {
+    console.log("save resume called");
     try {
-      const jwtToken = localStorage.getItem('jwtToken');
-      const response = await fetch(
-        `http://192.168.86.29:8082/personalInfo/savePersonalInfo/${applicantId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${jwtToken}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      // Retrieve user data from localStorage
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const jwtToken = userData?.data?.jwt;
+      const applicantId = userData?.id;
+  
+      if (!jwtToken || !applicantId) {
+        console.error("User is not authenticated");
+        return;
+      }
+  
+      // Construct the full resume payload
+      const resumeData = {
+        resumePersonalInfo: {
+          fullName: data.personalInfo.name,
+          email: data.personalInfo.email,
+          phoneNo: data.personalInfo.phone,
+          address: data.personalInfo.location,
+          summary: data.personalInfo.summary,
+          role: data.personalInfo.title,
+        },
+        resumeSkills: {
+          technicalSkills: data.skills,
+        },
+        resumeExperiences: data.experience.map((exp) => ({
+          company: exp.company,
+          jobTitle: exp.jobTitle,
+          startDate: exp.startDate,
+          endDate: exp.endDate,
+          description: exp.description,
+        })),
 
+       
+          
+        resumeEducations: data.education.map((edu) => ({
+          college: edu.university,
+          startYear: edu.graduationDate,
+          endYear: edu.graduationDate, // Assuming same year for now
+          cgpa: edu.percentage,
+          standard: edu.degree,
+        })),
+        resumeProjects: data.projects.map((proj) => ({
+          title: proj.title,
+          description: proj.description,
+          technologies: proj.technologies.split(","),
+          startDate: proj.startDate,
+          endDate: proj.endDate,
+          link: proj.link,
+        })),
+        resumeCertificates: data.certifications.map((cert) => ({
+          title: cert.name,
+          issuedBy: cert.issuingOrganization,
+          year: cert.issueDate,
+        })),
+        resumeLanguages: data.languages.map((lang) => ({
+          languageName: lang,
+        })),
+        resumeIntrest:{
+          intrests:data.interests
+        }
+     
+       
+      };
+  
+      // Send API request
+      const response = await fetch(`${apiUrl}/resume-builder/saveresume/${applicantId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwtToken}`,
+        },
+        body: JSON.stringify(resumeData),
+      });
+  
       if (response.ok) {
-        alert("Personal information saved successfully!");
+        alert("Resume saved successfully!");
       } else {
         const errorData = await response.json();
-        alert(`Failed to save personal information: ${errorData.message}`);
+        alert(`Failed to save resume: ${errorData.message}`);
       }
     } catch (error) {
-      console.error("Error saving personal information:", error);
-      alert("An error occurred while saving personal information.");
+      console.error("Error saving resume:", error);
+      alert("An error occurred while saving the resume.");
+      
     }
   };
+  console.log(resumeData.resumeExperiences?.[1]?.company);
 
+
+  //update Method
+
+//   const updateResume = async () => {
+//     console.log("update resume called");
+
+//     try {
+//         const userData = JSON.parse(localStorage.getItem("user"));
+//         const jwtToken = userData?.data?.jwt;
+//         const applicantId = userData?.id;
+
+//         if (!jwtToken || !applicantId) {
+//             console.error("User is not authenticated");
+//             return;
+//         }
+
+//         // Ensure resumeData is properly initialized before accessing properties
+//         if (!resumeData) {
+//             console.error("resumeData is undefined or null.");
+//             return;
+//         }
+
+//         // Construct updated resume data, preserving existing values where not updated
+//         const updatedResume = {
+//             resumePersonalInfo: {
+//                 fullName: data.personalInfo?.name || resumeData.resumePersonalInfo?.fullName || "",
+//                 email: data.personalInfo?.email || resumeData.resumePersonalInfo?.email || "",
+//                 phoneNo: data.personalInfo?.phone || resumeData.resumePersonalInfo?.phoneNo || "",
+//                 address: data.personalInfo?.location || resumeData.resumePersonalInfo?.address || "",
+//                 summary: data.personalInfo?.summary || resumeData.resumePersonalInfo?.summary || "",
+//                 role: data.personalInfo?.title || resumeData.resumePersonalInfo?.role || "",
+//             },
+//             resumeSkills: {
+//                 technicalSkills: data.skills.length > 0 ? data.skills : resumeData.resumeSkills?.technicalSkills || [],
+//             },
+//             resumeExperiences: data.experience.length > 0
+//                 ? data.experience.map((exp) => ({
+//                     company: exp.company,
+//                     jobTitle: exp.jobTitle,
+//                     startDate: exp.startDate,
+//                     endDate: exp.endDate,
+//                     description: exp.description,
+//                 }))
+//                 : resumeData.resumeExperiences || [],
+//             resumeEducations: data.education.length > 0
+//                 ? data.education.map((edu) => ({
+//                     college: edu.university,
+//                     startYear: edu.graduationDate,
+//                     endYear: edu.graduationDate, // Assuming same year for now
+//                     cgpa: edu.percentage,
+//                     standard: edu.degree,
+//                 }))
+//                 : resumeData.resumeEducations || [],
+//             resumeProjects: data.projects.length > 0
+//                 ? data.projects.map((proj) => ({
+//                     title: proj.title,
+//                     description: proj.description,
+//                     technologies: proj.technologies.split(","),
+//                     startDate: proj.startDate,
+//                     endDate: proj.endDate,
+//                     link: proj.link,
+//                 }))
+//                 : resumeData.resumeProjects || [],
+//             resumeCertificates: data.certifications.length > 0
+//                 ? data.certifications.map((cert) => ({
+//                     title: cert.name,
+//                     issuedBy: cert.issuingOrganization,
+//                     year: cert.issueDate,
+//                 }))
+//                 : resumeData.resumeCertificates || [],
+//             resumeLanguages: data.languages.length > 0
+//                 ? data.languages.map((lang) => ({
+//                     languageName: lang,
+//                 }))
+//                 : resumeData.resumeLanguages || [],
+//             resumeIntrest: {
+//                 intrests: data.interests.length > 0 ? data.interests : resumeData.resumeIntrest?.intrests || [],
+//             },
+//         };
+
+//         // Send API request
+//         const response = await fetch(`${apiUrl}/resume-builder/updateResume/${applicantId}`, {
+//             method: "PUT",
+//             headers: {
+//                 "Content-Type": "application/json",
+//                 Authorization: `Bearer ${jwtToken}`,
+//             },
+//             body: JSON.stringify(updatedResume),
+//         });
+
+//         if (response.ok) {
+//             alert("Resume saved successfully!");
+//         } else {
+//             const errorData = await response.json();
+//             alert(`Failed to save resume: ${errorData.message}`);
+//         }
+//     } catch (error) {
+//         console.error("Error saving resume:", error);
+//         alert("An error occurred while saving the resume.");
+//     }
+// };
+
+
+const updateResume = async () => {
+  console.log("update resume called");
+
+  try {
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const jwtToken = userData?.data?.jwt;
+      const applicantId = userData?.id;
+
+      if (!jwtToken || !applicantId) {
+          console.error("User is not authenticated");
+          return;
+      }
+
+      // Ensure resumeData is initialized before accessing properties
+      if (!resumeData) {
+          console.error("resumeData is undefined or null.");
+          return;
+      }
+
+      // Merge fetched resumeData with new data, ensuring all fields are retained
+      const updatedResume = {
+          resumePersonalInfo: {
+              fullName: data.personalInfo?.name ?? resumeData.resumePersonalInfo?.fullName ?? "",
+              email: data.personalInfo?.email ?? resumeData.resumePersonalInfo?.email ?? "",
+              phoneNo: data.personalInfo?.phone ?? resumeData.resumePersonalInfo?.phoneNo ?? "",
+              address: data.personalInfo?.location ?? resumeData.resumePersonalInfo?.address ?? "",
+              summary: data.personalInfo?.summary ?? resumeData.resumePersonalInfo?.summary ?? "",
+              role: data.personalInfo?.title ?? resumeData.resumePersonalInfo?.role ?? "",
+          },
+          resumeSkills: {
+              technicalSkills: data.skills.length > 0 ? data.skills : resumeData.resumeSkills?.technicalSkills ?? [],
+          },
+          resumeExperiences:
+              data.experience.length > 0
+                  ? data.experience.map((exp) => ({
+                        company: exp.company ?? "",
+                        jobTitle: exp.jobTitle ?? "",
+                        startDate: exp.startDate ?? "",
+                        endDate: exp.endDate ?? "",
+                        description: exp.description ?? "",
+                    }))
+                  : resumeData.resumeExperiences ?? [],
+          resumeEducations:
+              data.education.length > 0
+                  ? data.education.map((edu) => ({
+                        college: edu.university ?? "",
+                        startYear: edu.graduationDate ?? "",
+                        endYear: edu.graduationDate ?? "", // Assuming same year for now
+                        cgpa: edu.percentage ?? "",
+                        standard: edu.degree ?? "",
+                    }))
+                  : resumeData.resumeEducations ?? [],
+          resumeProjects:
+              data.projects.length > 0
+                  ? data.projects.map((proj) => ({
+                        title: proj.title ?? "",
+                        description: proj.description ?? "",
+                        technologies: proj.technologies ? proj.technologies.split(",") : [],
+                        startDate: proj.startDate ?? "",
+                        endDate: proj.endDate ?? "",
+                        link: proj.link ?? "",
+                    }))
+                  : resumeData.resumeProjects ?? [],
+          resumeCertificates:
+              data.certifications.length > 0
+                  ? data.certifications.map((cert) => ({
+                        title: cert.name ?? "",
+                        issuedBy: cert.issuingOrganization ?? "",
+                        year: cert.issueDate ?? "",
+                    }))
+                  : resumeData.resumeCertificates ?? [],
+          resumeLanguages:
+              data.languages.length > 0
+                  ? data.languages.map((lang) => ({
+                        languageName: lang ?? "",
+                    }))
+                  : resumeData.resumeLanguages ?? [],
+          resumeIntrest: {
+              intrests: data.interests.length > 0 ? data.interests : resumeData.resumeIntrest?.intrests ?? [],
+          },
+      };
+
+      // Send API request
+      const response = await fetch(`${apiUrl}/resume-builder/updateResume/${applicantId}`, {
+          method: "PUT",
+          headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${jwtToken}`,
+          },
+          body: JSON.stringify(updatedResume),
+      });
+
+      if (response.ok) {
+          alert("Resume saved successfully!");
+      } else {
+          const errorData = await response.json();
+          alert(`Failed to save resume: ${errorData.message}`);
+      }
+  } catch (error) {
+      console.error("Error saving resume:", error);
+      alert("An error occurred while saving the resume.");
+  }
+};
+
+
+  console.log(resumeData.resumeExperiences?.[1]?.company);
 
   return (
     <div className="container row py-4">
@@ -186,7 +605,7 @@ const removeInterest = (index) => {
         type="text"
         className="form-control"
         placeholder="Full Name"
-        value={data.personalInfo.name}
+        value={data.personalInfo.name  || resumeData.fullName}
         onChange={(e) => updatePersonalInfo("name", e.target.value)}
       />
     </div>
@@ -196,17 +615,17 @@ const removeInterest = (index) => {
         type="text"
         className="form-control"
         placeholder="Professional Title"
-        value={data.personalInfo.title}
+        value={data.personalInfo.title|| resumeData.role}
         onChange={(e) => updatePersonalInfo("title", e.target.value)}
       />
     </div>
     <div className="col-md-6">
-      <label className="form-label">Email</label>
+      <label className="form-label">Email1</label>
       <input
         type="email"
         className="form-control"
         placeholder="Email"
-        value={data.personalInfo.email}
+        value={data.personalInfo.email|| resumeData.email}
         onChange={(e) => updatePersonalInfo("email", e.target.value)}
       />
     </div>
@@ -216,7 +635,7 @@ const removeInterest = (index) => {
         type="tel"
         className="form-control"
         placeholder="Phone"
-        value={data.personalInfo.phone}
+        value={data.personalInfo.phone|| resumeData.phoneNo}
         onChange={(e) => updatePersonalInfo("phone", e.target.value)}
       />
     </div>
@@ -226,7 +645,7 @@ const removeInterest = (index) => {
         type="text"
         className="form-control"
         placeholder="Location"
-        value={data.personalInfo.location}
+        value={data.personalInfo.location|| resumeData.address}
         onChange={(e) => updatePersonalInfo("location", e.target.value)}
       />
     </div>
@@ -236,7 +655,7 @@ const removeInterest = (index) => {
         className="form-control"
         placeholder="Professional Summary"
         rows="3"
-        value={data.personalInfo.summary}
+        value={data.personalInfo.summary|| resumeData.summary}
         onChange={(e) => updatePersonalInfo("summary", e.target.value)}
       />
     </div>
@@ -248,7 +667,7 @@ const removeInterest = (index) => {
         type="url"
         className="form-control"
         placeholder="LinkedIn URL"
-        value={data.personalInfo.linkedin}
+        value={data.personalInfo.linkedin|| resumeData.linkedin}
         onChange={(e) => updatePersonalInfo("linkedin", e.target.value)}
       />
     </div>
@@ -258,7 +677,7 @@ const removeInterest = (index) => {
         type="url"
         className="form-control"
         placeholder="GitHub URL"
-        value={data.personalInfo.github}
+        value={data.personalInfo.github|| resumeData.github}
         onChange={(e) => updatePersonalInfo("github", e.target.value)}
       />
     </div>
@@ -268,18 +687,18 @@ const removeInterest = (index) => {
         type="url"
         className="form-control"
         placeholder="Website URL"
-        value={data.personalInfo.website}
+        value={data.personalInfo.website|| resumeData.website}
         onChange={(e) => updatePersonalInfo("website", e.target.value)}
       />
     </div>
   </div>
-  <button
+  {/* <button
           type="button"
           className="btn btn-success mt-3"
           onClick={savePersonalInfo}
         >
           Save Personal Information
-        </button>
+        </button> */}
 </div>
 
       {/* Experience Section */}
@@ -303,7 +722,12 @@ const removeInterest = (index) => {
                 type="text"
                 className="form-control"
                 placeholder="Company"
-                value={exp.company}
+                // value={exp.company || resumeData.resumeExperiences?.[0]?.company || ''}
+                value={exp.company ||resumeData.experiences?.[index]?.company || ''}
+
+
+               
+
                 onChange={(e) => {
                   const newExperience = [...data.experience];
                   newExperience[index].company = e.target.value;
@@ -314,16 +738,18 @@ const removeInterest = (index) => {
             <div className="mb-3">
               <label className="form-label">Position</label>
               <input
-                type="text"
-                className="form-control"
-                placeholder="Position"
-                value={exp.position}
-                onChange={(e) => {
-                  const newExperience = [...data.experience];
-                  newExperience[index].position = e.target.value;
-                  onChange({ ...data, experience: newExperience });
-                }}
-              />
+  type="text"
+  className="form-control"
+  placeholder="Position"
+  value={exp.jobTitle
+    ||resumeData.experiences?.[index]?.jobTitle||""
+  } // Change from `position` to `jobTitle`
+  onChange={(e) => {
+    const newExperience = [...data.experience];
+    newExperience[index].jobTitle = e.target.value; // Update field name
+    onChange({ ...data, experience: newExperience });
+  }}
+/>
             </div>
             <div className="mb-3">
               <label className="form-label">Start Date</label>
@@ -331,7 +757,7 @@ const removeInterest = (index) => {
                 type="date"
                 className="form-control"
                 placeholder="e.g. Jan 2020"
-                value={exp.startDate}
+                value={exp.startDate ||resumeData.experiences?.[index]?.startDate||""}
                 onChange={(e) => {
                   const newExperience = [...data.experience];
                   newExperience[index].startDate = e.target.value;
@@ -345,7 +771,7 @@ const removeInterest = (index) => {
                 type="date"
                 className="form-control"
                 placeholder="e.g. Jan 2020"
-                value={exp.endDate}
+                value={exp.endDate||resumeData.experiences?.[index]?.startDate||""}
                 onChange={(e) => {
                   const newExperience = [...data.experience];
                   newExperience[index].endDate = e.target.value;
@@ -360,7 +786,7 @@ const removeInterest = (index) => {
                 type="text"
                 className="form-control"
                 placeholder="e.g. Jan 2020 - Dec 2023"
-                value={exp.duration}
+                value={exp.duration||resumeData.experiences?.[index]?.duration||""}
                 onChange={(e) => {
                   const newExperience = [...data.experience];
                   newExperience[index].duration = e.target.value;
@@ -374,14 +800,19 @@ const removeInterest = (index) => {
                 className="form-control"
                 placeholder="Describe your work experience"
                 rows="3"
-                value={exp.description}
+                value={exp.description||resumeData.experiences?.[index]?.description||""}
                 onChange={(e) => {
                   const newExperience = [...data.experience];
                   newExperience[index].description = e.target.value;
                   onChange({ ...data, experience: newExperience });
                 }}              />
             </div>
+            {/* <button className="btn btn-success mt-3" onClick={saveExperiences}>
+  Save Experiences
+</button> */}
+
           </div>
+          
         ))}
         <button
           type="button"
@@ -416,7 +847,7 @@ const removeInterest = (index) => {
                 type="text"
                 className="form-control"
                 placeholder="University"
-                value={edu.university}
+                value={edu.university ||resumeData.educations?.[index]?.college|| ''}
                 onChange={(e) => updateEducation(index, 'university', e.target.value)}
               />
             </div>
@@ -426,7 +857,7 @@ const removeInterest = (index) => {
                 type="text"
                 className="form-control"
                 placeholder="School"
-                value={edu.school}
+                value={edu.school||resumeData.educations?.[index]?.school|| ''}
                 onChange={(e) => updateEducation(index, 'school', e.target.value)}
               />
             </div>
@@ -436,7 +867,7 @@ const removeInterest = (index) => {
                 type="text"
                 className="form-control"
                 placeholder="Degree"
-                value={edu.degree}
+                value={edu.degree ||resumeData.educations?.[index]?.standard|| ''}
                 onChange={(e) => updateEducation(index, 'degree', e.target.value)}
               />
             </div>
@@ -453,20 +884,20 @@ const removeInterest = (index) => {
             <div className="mb-3">
               <label className="form-label">Graduation Start Date</label>
               <input
-                type="text"
+                type="date"
                 className="form-control"
                 placeholder="e.g., May 2024"
-                value={edu.graduationStartDate}
+                value={edu.graduationStartDate  ||resumeData.educations?.[index]?.startYear|| ''}
                 onChange={(e) => updateEducation(index, 'graduationStartDate', e.target.value)}
               />
             </div>
             <div className="mb-3">
               <label className="form-label">Graduation End Date</label>
               <input
-                type="text"
+                type="date"
                 className="form-control"
                 placeholder="e.g., May 2024"
-                value={edu.graduationDate}
+                value={edu.graduationDate ||resumeData.educations?.[index]?.endYear|| ''}
                 onChange={(e) => updateEducation(index, 'graduationDate', e.target.value)}
               />
             </div>
@@ -476,7 +907,7 @@ const removeInterest = (index) => {
                 type="text"
                 className="form-control"
                 placeholder="e.g., 85%"
-                value={edu.percentage}
+                value={edu.percentage ||resumeData.educations?.[index]?.cgpa|| ''}
                 onChange={(e) => updateEducation(index, 'percentage', e.target.value)}
               />
             </div>
@@ -486,7 +917,7 @@ const removeInterest = (index) => {
                 className="form-control"
                 placeholder="Describe your studies, achievements, or relevant coursework"
                 rows="3"
-                value={edu.description}
+                value={edu.description ||resumeData.educations?.[index]?.description|| ''}
                 onChange={(e) => updateEducation(index, 'description', e.target.value)}
               />
             </div>
@@ -518,7 +949,7 @@ const removeInterest = (index) => {
                 type="text"
                 className="form-control"
                 placeholder="Skill"
-                value={skill}
+                value={skill ||resumeData.skills?.[index].technicalSkillName|| ''}
                 onChange={(e) => {const newSkills = [...data.skills];
                   newSkills[index] = e.target.value;
                   onChange({ ...data, skills: newSkills });}}
@@ -553,7 +984,7 @@ const removeInterest = (index) => {
                 type="text"
                 className="form-control"
                 placeholder="Language"
-                value={language}
+                value={language ||resumeData.languages?.[index].languageName|| ''}
                 onChange={(e) => updateLanguage(index, e.target.value)}
               />
             </div>
@@ -589,7 +1020,7 @@ const removeInterest = (index) => {
           type="text"
           className="form-control"
           placeholder="Project Title"
-          value={project.title}
+          value={project.title ||resumeData.projects?.[index].title|| ''}
           onChange={(e) => updateProject(index, 'title', e.target.value)}
         />
       </div>
@@ -599,7 +1030,7 @@ const removeInterest = (index) => {
           className="form-control"
           placeholder="Brief description of the project"
           rows="3"
-          value={project.description}
+          value={project.description  ||resumeData.projects?.[index].description|| ''}
           onChange={(e) => updateProject(index, 'description', e.target.value)}
         />
       </div>
@@ -609,7 +1040,7 @@ const removeInterest = (index) => {
           type="text"
           className="form-control"
           placeholder="e.g., React, Node.js, MongoDB"
-          value={project.technologies}
+          value={project.technologies ||resumeData.projects?.[index].technologies|| ''}
           onChange={(e) => updateProject(index, 'technologies', e.target.value)}
         />
       </div>
@@ -619,8 +1050,26 @@ const removeInterest = (index) => {
           type="url"
           className="form-control"
           placeholder="URL to the project or repository"
-          value={project.link}
+          value={project.link ||resumeData.projects?.[index].link|| ''}
           onChange={(e) => updateProject(index, 'link', e.target.value)}
+        />
+      </div>
+      <div className="mb-3">
+        <label className="form-label">Start Date</label>
+        <input
+          type="date"
+          className="form-control"
+          value={project.startDate ||resumeData.projects?.[index].startDate|| ''}
+          onChange={(e) => updateProject(index, 'startDate', e.target.value)}
+        />
+      </div>
+      <div className="mb-3">
+        <label className="form-label">End Date</label>
+        <input
+          type="date"
+          className="form-control"
+          value={project.endDate ||resumeData.projects?.[index].endDate|| ''}
+          onChange={(e) => updateProject(index, 'endDate', e.target.value)}
         />
       </div>
     </div>
@@ -634,6 +1083,7 @@ const removeInterest = (index) => {
     Add Project
   </button>
 </div>
+
 
 <div className="mb-4">
   <h2 className="h4">Certifications</h2>
@@ -652,7 +1102,7 @@ const removeInterest = (index) => {
           type="text"
           className="form-control"
           placeholder="Certification Name"
-          value={cert.name}
+          value={cert.name ||resumeData.certifications?.[index].title|| ''}
           onChange={(e) => updateCertification(index, 'name', e.target.value)}
         />
       </div>
@@ -662,7 +1112,7 @@ const removeInterest = (index) => {
           type="text"
           className="form-control"
           placeholder="Issuing Organization"
-          value={cert.issuingOrganization}
+          value={cert.issuingOrganization ||resumeData.certifications?.[index].issuedBy|| ''}
           onChange={(e) => updateCertification(index, 'issuingOrganization', e.target.value)}
         />
       </div>
@@ -671,7 +1121,7 @@ const removeInterest = (index) => {
         <input
           type="date"
           className="form-control"
-          value={cert.issueDate}
+          value={cert.issueDate ||resumeData.certifications?.[index].startDate|| ''}
           onChange={(e) => updateCertification(index, 'issueDate', e.target.value)}
         />
       </div>
@@ -680,7 +1130,7 @@ const removeInterest = (index) => {
         <input
           type="date"
           className="form-control"
-          value={cert.expirationDate}
+          value={cert.expirationDate ||resumeData.certifications?.[index].year|| ''}
           onChange={(e) => updateCertification(index, 'expirationDate', e.target.value)}
         />
       </div>
@@ -700,7 +1150,7 @@ const removeInterest = (index) => {
           type="url"
           className="form-control"
           placeholder="Credential URL"
-          value={cert.credentialURL}
+          value={cert.credentialURL ||resumeData.certifications?.[index].credentialURL|| ''}
           onChange={(e) => updateCertification(index, 'credentialURL', e.target.value)}
         />
       </div>
@@ -717,7 +1167,7 @@ const removeInterest = (index) => {
 </div>
 
 
-      {/* intrest */}
+      {/* interest */}
  
       <div className="mb-4">
         <h2 className="h4">Interests</h2>
@@ -736,7 +1186,7 @@ const removeInterest = (index) => {
                 type="text"
                 className="form-control"
                 placeholder="Interest"
-                value={interest}
+                value={interest   ||resumeData.interests?.[index].intrest|| ''}
                 onChange={(e) => updateInterest(index, e.target.value)}
               />
             </div>
@@ -750,8 +1200,15 @@ const removeInterest = (index) => {
           <FaPlus className="me-2" />
           Add Interest
         </button>
+
+
         <h6 className="mt-2">Choose Template</h6>
         <ResumeTemplateQueue/>
+        <button className="btn btn-primary" type="Submit" name="SUBMIT" onClick={isEditing?updateResume:saveResume}>
+          Save Resume
+
+        </button>
+        
       
         
       </div>
@@ -763,3 +1220,215 @@ const removeInterest = (index) => {
 };
 
 export default ResumeForm;
+
+
+
+// import { useState, useEffect } from "react";
+
+// const ResumeForm = ({ applicantId }) => {
+//   const apiUrl = "your_api_base_url"; // Replace with your actual API URL
+
+//   // State for form data
+//   const [resumeData, setResumeData] = useState({
+//     fullName: "",
+//     email: "",
+//     phone: "",
+//     experience: "",
+//     education: "",
+//   });
+
+//   // State to control edit mode
+//   const [isEditing, setIsEditing] = useState(false);
+
+//   // Fetch resume data when the component loads
+//   useEffect(() => {
+//     fetch(`${apiUrl}/resume-builder/saveresume/${applicantId}`)
+//       .then((response) => response.json())
+//       .then((data) => {
+//         if (data) {
+//           setResumeData(data); // Populate form with API data
+//         }
+//       })
+//       .catch((error) => console.error("Error fetching resume:", error));
+//   }, [applicantId]);
+
+//   // Handle input changes
+//   const handleChange = (e) => {
+//     setResumeData({ ...resumeData, [e.target.name]: e.target.value });
+//   };
+
+//   // Save updated data (PUT request)
+//   const handleSave = () => {
+//     fetch(`${apiUrl}/resume-builder/saveresume/${applicantId}`, {
+//       method: "PUT",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify(resumeData),
+//     })
+//       .then((response) => response.json())
+//       .then((data) => {
+//         console.log("Resume updated:", data);
+//         setIsEditing(false); // Switch back to view mode
+//       })
+//       .catch((error) => console.error("Error updating resume:", error));
+//   };
+
+//   return (
+//     <div>
+//       <h2>Resume Form</h2>
+
+//       <form>
+//         <label>Full Name:</label>
+//         <input
+//           type="text"
+//           name="fullName"
+//           value={resumeData.fullName }
+//           onChange={handleChange}
+//           readOnly={!isEditing}
+//         />
+
+//         <label>Email:</label>
+//         <input
+//           type="email"
+//           name="email"
+//           value={resumeData.email}
+//           onChange={handleChange}
+//           readOnly={!isEditing}
+//         />
+
+//         <label>Phone:</label>
+//         <input
+//           type="tel"
+//           name="phone"
+//           value={resumeData.phone}
+//           onChange={handleChange}
+//           readOnly={!isEditing}
+//         />
+
+//         <label>Experience:</label>
+//         <input
+//           type="text"
+//           name="experience"
+//           value={resumeData.experience}
+//           onChange={handleChange}
+//           readOnly={!isEditing}
+//         />
+
+//         <label>Education:</label>
+//         <input
+//           type="text"
+//           name="education"
+//           value={resumeData.education}
+//           onChange={handleChange}
+//           readOnly={!isEditing}
+//         />
+//       </form>
+
+//       {/* Toggle between Edit and Save mode */}
+//       {isEditing ? (
+//         <button onClick={handleSave}>Save</button>
+//       ) : (
+//         <button onClick={() => setIsEditing(true)}>Edit</button>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default ResumeForm;
+
+
+
+// import React, { useState, useEffect } from "react";
+// import { apiUrl } from "../../../services/ApplicantAPIService";
+// import { useUserContext } from "../../../components/common/UserProvider";
+
+// const ResumeForm = () => {
+//   const [resumeData, setResumeData] = useState(null);
+//   const [loading, setLoading] = useState(true);
+//   const [isEditing, setIsEditing] = useState(false);
+//   const user = useUserContext()?.user;
+
+//   useEffect(() => {
+//     if (user?.id) {
+//       fetchResumeData();
+//     }
+//   }, [user]);
+
+//   const fetchResumeData = async () => {
+//     try {
+//       if (!user?.id) return;
+//       setLoading(true);
+//       const jwtToken = localStorage.getItem("jwtToken");
+//       const response = await fetch(`${apiUrl}/resume-builder/getResume/${user.id}`, {
+//         headers: { Authorization: `Bearer ${jwtToken}` },
+//       });
+//       if (!response.ok) throw new Error(`Error: ${response.status}`);
+//       const data = await response.json();
+//       setResumeData(data.resumePersonalInfo || {});
+//     } catch (error) {
+//       console.error("Error fetching resume data:", error);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleChange = (e) => {
+//     setResumeData({ ...resumeData, [e.target.name]: e.target.value });
+//   };
+
+//   const handleSave = async () => {
+//     try {
+//       const jwtToken = localStorage.getItem("jwtToken");
+//       const response = await fetch(`${apiUrl}/resume-builder/updateResume/${user.id}`, {
+//         method: "PUT",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${jwtToken}`,
+//         },
+//         body: JSON.stringify(resumeData),
+//       });
+//       if (!response.ok) throw new Error(`Error: ${response.status}`);
+//       await response.json();
+//       setIsEditing(false);
+//     } catch (error) {
+//       console.error("Error updating resume:", error);
+//     }
+//   };
+
+//   if (loading) return <p>Loading...</p>;
+//   if (!resumeData) return <p>No resume data found.</p>;
+
+//   return (
+//     <div>
+//       <h2>Resume Form</h2>
+//       <form>
+//         <label>Full Name:</label>
+//         <input type="text" name="fullName" value={resumeData.fullName || ""} onChange={handleChange} />
+        
+//         <label>Email:</label>
+//         <input type="email" name="email" value={resumeData.email || ""} onChange={handleChange} />
+
+//         <label>Phone:</label>
+//         <input type="tel" name="phoneNo" value={resumeData.phoneNo || ""} onChange={handleChange}  />
+
+//         <label>Address:</label>
+//         <input type="text" name="address" value={resumeData.address || ""} onChange={handleChange} />
+
+//         <label>LinkedIn:</label>
+//         <input type="text" name="linkedin" value={resumeData.linkedin || ""} onChange={handleChange}  />
+//         <label>Title:</label>
+//         <input type="text" name="linkedin" value={resumeData.role || ""} onChange={handleChange}  />
+//       </form>
+
+//       {isEditing ? (
+//         <button onClick={handleSave}>Save</button>
+//       ) : (
+//         <button onClick={() => setIsEditing(true)}>Edit</button>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default ResumeForm;
+

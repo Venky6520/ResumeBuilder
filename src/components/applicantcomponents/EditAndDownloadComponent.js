@@ -16,6 +16,17 @@ const EditAndDownloadComponent = ({ pdfUrl, loading }) => {
   const [errorMessage, setErrorMessage] = useState(''); 
   
   const openModal = () => setIsModalOpen(true);
+  const openResumeBuilder = () => {
+    // Assume `storedResumeData` contains the latest resume data
+    const storedResumeData = JSON.parse(localStorage.getItem("applicantData")) || {};
+    
+    // Store in session or localStorage
+    localStorage.setItem("editingResume", JSON.stringify(storedResumeData));
+  
+    // Navigate to Resume Builder
+    window.location.href = "/resume-builder";
+  };
+  
   const closeModal = () => {
     setIsModalOpen(false);
     window.location.reload(); 
@@ -58,11 +69,11 @@ const EditAndDownloadComponent = ({ pdfUrl, loading }) => {
                 <div className="col-lg-12 col-md-12 ">
                   <div className="change-password bg-white" style={{borderRadius:'23px 23px 1px 2px', marginBottom: 0}}>
                   <div className="action-buttons" style={{ textAlign: 'right', paddingRight: '10px' }}>
-                  <svg onClick={openModal} xmlns="http://www.w3.org/2000/svg" width="25" height="18" viewBox="0 0 24 25" fill="none">
+                  <svg onClick={openResumeBuilder} xmlns="http://www.w3.org/2000/svg" width="25" height="18" viewBox="0 0 24 25" fill="none">
   <path d="M11 4.25H4C3.46957 4.25 2.96086 4.46071 2.58579 4.83579C2.21071 5.21086 2 5.71957 2 6.25V20.25C2 20.7804 2.21071 21.2891 2.58579 21.6642C2.96086 22.0393 3.46957 22.25 4 22.25H18C18.5304 22.25 19.0391 22.0393 19.4142 21.6642C19.7893 21.2891 20 20.7804 20 20.25V13.25" stroke="#787474" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M18.5 2.74998C18.8978 2.35216 19.4374 2.12866 20 2.12866C20.5626 2.12866 21.1022 2.35216 21.5 2.74998C21.8978 3.14781 22.1213 3.68737 22.1213 4.24998C22.1213 4.81259 21.8978 5.35216 21.5 5.74998L12 15.25L8 16.25L9 12.25L18.5 2.74998Z" stroke="#787474" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
-                  <span className="edit" onClick={openModal} style={{ cursor: 'pointer',fontSize: '16px' }}>
+                  <span className="edit" onClick={openResumeBuilder} style={{ cursor: 'pointer',fontSize: '16px' }}>
                   
                     Edit</span>&nbsp;&nbsp;&nbsp;&nbsp;
                     <svg onClick={handleDownload} xmlns="http://www.w3.org/2000/svg" width="25" height="18" viewBox="0 0 24 25" fill="none">

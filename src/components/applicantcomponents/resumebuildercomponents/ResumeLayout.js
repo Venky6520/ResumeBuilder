@@ -275,7 +275,7 @@ function ResumeLayout() {
 formData.append("file", pdfFile);
 
 
-const response = await fetch("http://localhost:8081/upload", {
+const response = await fetch("http://192.168.86.250:8081/upload", {
   method: "POST",
   body: formData,
 });
