@@ -775,7 +775,7 @@ const webhookResponse = await fetch(webhookUrl, {
       </div>
       <button
         type="button"
-        onClick={triggerFileInputClick}
+        onClick={()=>{triggerFileInputClick,handleResumeUpload}}
         className="btn-3"
         style={{
           backgroundColor: '#7E7E7E',
