@@ -18,6 +18,7 @@ import axios from 'axios';
     // export const apiUrl = 'http://192.168.86.235:8081'; //moinbasha pate
         export const apiUrl = 'https://bitlab-resume-builder.onrender.com'; //moinbasha pate
 
+
     
 
     

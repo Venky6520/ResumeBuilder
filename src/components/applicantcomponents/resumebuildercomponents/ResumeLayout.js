@@ -162,6 +162,7 @@ function ResumeLayout() {
       console.log("Uploading PDF to Server...");
   
       const response = await fetch(`${apiUrl}/resume/upload/${user.id}`, {
+
         method: "POST",
         headers: {
           Authorization: `Bearer ${jwtToken}`,
