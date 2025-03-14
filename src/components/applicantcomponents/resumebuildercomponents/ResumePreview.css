@@ -1,19 +1,4 @@
-/* @media print {
-    body {
-      -webkit-print-color-adjust: exact;
-    }
-  
-    #resume-preview {
-      width: 210mm;
-      min-height: 297mm;
-      padding: 20mm;
-      box-shadow: none;
-    }
-  
-    .page-break {
-      page-break-before: always;
-    }
-  } */
+
   .page-break {
     display: none; /* Hide in normal view */
     height: 0;
