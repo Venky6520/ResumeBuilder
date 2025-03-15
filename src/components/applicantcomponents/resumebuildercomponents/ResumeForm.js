@@ -86,36 +86,90 @@ const [resumeData, setResumeData] = useState({
 
   };
   
+  // const saveResumeData = async () => {
+  //   try {
+  //     console.log("Sending updated data:", JSON.stringify(updatedResumeData, null, 2));
+  
+  //     const jwtToken = localStorage.getItem("jwtToken");
+  //     const response = await fetch(`${apiUrl}/resume-builder/updateResume/${user.id}`, {
+  //       method: "PUT",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${jwtToken}`,
+  //       },
+  //       body: JSON.stringify(updatedResumeData),
+  //     });
+  
+  //     if (!response.ok) {
+  //       const errorText = await response.text();
+  //       throw new Error(`Error: ${response.status} - ${errorText}`);
+  //     }
+  
+  //     const responseData = await response.json();
+  //     console.log("API response after update:", responseData);
+  
+  //   } catch (error) {
+  //     console.error("Error updating resume:", error);
+  //   }
+  // };
+  
+
+
   const saveResumeData = async () => {
-    try {
-      console.log("Sending updated data:", JSON.stringify(updatedResumeData, null, 2));
-  
-      const jwtToken = localStorage.getItem("jwtToken");
-      const response = await fetch(`${apiUrl}/resume-builder/updateResume/${user.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${jwtToken}`,
-        },
-        body: JSON.stringify(updatedResumeData),
-      });
-  
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Error: ${response.status} - ${errorText}`);
-      }
-  
-      const responseData = await response.json();
-      console.log("API response after update:", responseData);
-  
-    } catch (error) {
-      console.error("Error updating resume:", error);
+  try {
+    // 🔹 Check if JWT token exists
+    const jwtToken = localStorage.getItem("jwtToken");
+    if (!jwtToken) {
+      console.error("JWT token is missing!");
+      return;
     }
-  };
-  
 
+    // 🔹 Check if user ID exists
+    if (!user || !user.id) {
+      console.error("User ID is missing!");
+      return;
+    }
 
-  
+    // 🔹 Check if updated resume data is valid
+    if (!updatedResumeData || Object.keys(updatedResumeData).length === 0) {
+      console.error("Updated resume data is empty!");
+      return;
+    }
+
+    console.log("Sending updated data:", JSON.stringify(updatedResumeData, null, 2));
+
+    // 🔹 API Call
+    const response = await fetch(`${apiUrl}/resume-builder/updateResume/${user.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${jwtToken}`,
+      },
+      body: JSON.stringify(updatedResumeData),
+    });
+
+    // 🔹 Handle API errors properly
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Error: ${response.status} - ${errorText}`);
+    }
+
+    // 🔹 Parse response safely
+    let responseData;
+    try {
+      responseData = await response.json();
+    } catch (error) {
+      console.error("Failed to parse response JSON:", error);
+      return;
+    }
+
+    console.log("API response after update:", responseData);
+
+  } catch (error) {
+    console.error("Error updating resume:", error);
+  }
+};
+
   
 
   if (loading) return <p>Loading...</p>;
